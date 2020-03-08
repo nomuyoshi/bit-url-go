@@ -2,42 +2,82 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
   bit-url
-  
-  Sample SAM Template for bit-url
+  Lambda, API Gateway, DynamoDBを使ったURL短縮サービス
 
+# 実行時に (スタックを作成または更新するとき)、テンプレートに渡すことができる値
+# https://docs.aws.amazon.com/ja_jp/AWSCloudFormation/latest/UserGuide/parameters-section-structure.html
+Parameters:
+  Salt:
+    Type: String
+  BaseUrl:
+    Type: String
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
     Timeout: 5
 
+# Resourcesでは、スタックに含めるAWSリソース(S3、DynamoDB、Lambdaなどなど)とそのプロパティを宣言する
+# AWS CloudFormationのリソースに加えて AWS SAM リソースを含めることができる。
+# https://docs.aws.amazon.com/ja_jp/AWSCloudFormation/latest/UserGuide/resources-section-structure.html
 Resources:
-  HelloWorldFunction:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+  # 論理ID 英数字で、テンプレート内で一意である必要がある。テンプレート内でリソースを参照するために使用する。
+  BitUrl:
+    # Lambda関数を作成する
+    # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Type: AWS::Serverless::Function
     Properties:
-      CodeUri: hello-world/
-      Handler: hello-world
+      # Lambda関数のデプロイメントパッケージの場所を指定する。S3 URIかローカルのパスが指定可能。今回はbit-url/ディレクトリ以下を指定
+      # そのため、build時の出力先をbit-url/以下にしておく必要がある。
+      CodeUri: bit-url/
+      # 実行するために呼び出される関数。
+      Handler: bit
       Runtime: go1.x
       Tracing: Active # https://docs.aws.amazon.com/lambda/latest/dg/lambda-x-ray.html
+      Policies: AmazonDynamoDBFullAccess # TODO: 後で見直す
+      # 関数をトリガーするイベントを設定
       Events:
         CatchAll:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
-            Path: /hello
-            Method: GET
-      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+            Path: /urls # /から書く必要がある
+            Method: POST
+      # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+      Environment:
         Variables:
-          PARAM1: VALUE
+          SALT: !Ref Salt
+          BASE_URL: !Ref BaseUrl
 
+  BitUrlTable:
+    # DynamoDB テーブルを作成
+    # https://docs.aws.amazon.com/ja_jp/AWSCloudFormation/latest/UserGuide/aws-resource-dynamodb-table.html
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: "bit_urls"
+      # テーブルとインデックスのキースキーマを記述する属性のリスト
+      AttributeDefinitions:
+        # 属性のデータ型。
+        #   S - 属性は文字列型
+        #   N - 属性は数値型
+        #   B - 属性はバイナリ型
+        - AttributeName: path
+          AttributeType: S
+      # テーブルのプライマリキーを構成する属性を指定。
+      # KeySchemaプロパティの属性は、AttributeDefinitionsプロパティにも定義する必要がある
+      KeySchema:
+        - AttributeName: path
+          # キー属性が担うロール:
+          #   HASH - パーティションキー
+          #   RANGE - ソートキー
+          KeyType: HASH
+      ProvisionedThroughput:
+        # 1 秒間に消費される読み込みの最大数。この最大数を超えると、DynamoDB が ThrottlingException を返す
+        ReadCapacityUnits: 1
+        # 1 秒間に消費される書き込みの最大数。この最大数を超えると、DynamoDB が ThrottlingException を返す
+        WriteCapacityUnits: 1
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
   # Find out more about other implicit resources you can reference within SAM
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
-  HelloWorldAPI:
-    Description: "API Gateway endpoint URL for Prod environment for First Function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
-  HelloWorldFunction:
-    Description: "First Lambda Function ARN"
-    Value: !GetAtt HelloWorldFunction.Arn
-  HelloWorldFunctionIamRole:
-    Description: "Implicit IAM Role created for Hello World function"
-    Value: !GetAtt HelloWorldFunctionRole.Arn
+  ApiUrl:
+    Description: "API endpoint URL for Prod environment"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/urls"
