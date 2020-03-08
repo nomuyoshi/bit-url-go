@@ -20,21 +20,15 @@ var dynamo db.DB
 var config env.Env
 
 type requestBody struct {
-	url string
+	URL string
 }
 
 type errorResponse struct {
 	message string
 }
 
-type response struct {
-	url string
-}
-
-// BitURL は短縮URLともとのURLをマッピングするもの
-type BitURL struct {
-	Path        string `dynamodbav:"path"`
-	OriginalURL string `dynamodbav:"original_url"`
+type responseBody struct {
+	URL string `json:"url"`
 }
 
 func init() {
@@ -57,7 +51,7 @@ func handler(req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse,
 	}
 
 	// net/urlパッケージでパースできれば良しとする。
-	pURL, err := url.Parse(r.url)
+	pURL, err := url.Parse(r.URL)
 	if err != nil {
 		return buildResponse(
 			http.StatusBadRequest,
@@ -66,9 +60,9 @@ func handler(req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse,
 	}
 
 	hashID := generateHashID(pURL)
-	bit := &BitURL{
+	bit := &db.BitURL{
 		Path:        hashID,
-		OriginalURL: r.url,
+		OriginalURL: r.URL,
 	}
 
 	if _, err = dynamo.PutItem(bit); err != nil {
@@ -78,7 +72,7 @@ func handler(req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse,
 		), err
 	}
 
-	res := response{url: config.BaseURL + "/" + bit.Path}
+	res := responseBody{URL: config.BaseURL + "/" + bit.Path}
 	b, _ := json.Marshal(res)
 	return buildResponse(
 		http.StatusOK,
