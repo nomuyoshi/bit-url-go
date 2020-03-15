@@ -72,7 +72,7 @@ func handler(req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse,
 		), err
 	}
 
-	res := responseBody{URL: config.BaseURL + "/" + bit.Path}
+	res := responseBody{URL: config.BaseURL + "bits/" + bit.Path}
 	b, _ := json.Marshal(res)
 	return buildResponse(
 		http.StatusOK,
