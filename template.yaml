@@ -26,9 +26,9 @@ Resources:
     # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Type: AWS::Serverless::Function
     Properties:
-      # Lambda関数のデプロイメントパッケージの場所を指定する。S3 URIかローカルのパスが指定可能。今回はbit-url/ディレクトリ以下を指定
-      # そのため、build時の出力先をbit-url/以下にしておく必要がある。
-      CodeUri: bit-url/
+      # Lambda関数のソースコードの場所を指定する。S3 URIかローカルのパスが指定可能。今回はbit/ディレクトリ以下を指定
+      # sam build コマンドは、実行時にここで指定したディレクトリをビルドする
+      CodeUri: bit/
       # 実行するために呼び出される関数。
       Handler: bit
       Runtime: go1.x
