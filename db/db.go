@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"github.com/pkg/errors"
 
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/nomuyoshi/bit-url/env"
@@ -47,4 +48,32 @@ func (db DB) PutItem(i interface{}) (*dynamodb.PutItemOutput, error) {
 		return nil, err
 	}
 	return item, nil
+}
+
+// GetItem はDynamoDBのデータを取得する
+func (db DB) GetItem(path string) (*dynamodb.GetItemOutput, error) {
+	item, err := db.Instance.GetItem(&dynamodb.GetItemInput{
+		TableName: aws.String(table),
+		Key: map[string]*dynamodb.AttributeValue{
+			"path": {
+				S: aws.String(path),
+			},
+		},
+	})
+
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get bit url")
+	}
+
+	if item.Item == nil {
+		return "", nil
+	}
+
+	bitURL := BitURL{}
+	err = dynamodbattribute.UnmarshalMap(item.Item, &bitURL)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to marshal BitURL")
+	}
+
+	return bitURL.OriginalURL, nil
 }

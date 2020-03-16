@@ -36,17 +36,32 @@ Resources:
       Policies: AmazonDynamoDBFullAccess # TODO: 後で見直す
       # 関数をトリガーするイベントを設定
       Events:
-        CatchAll:
+        CreateBitUrlEvent:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
-            Path: /urls # /から書く必要がある
+            Path: /bits # /から書く必要がある
             Method: POST
       # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
       Environment:
         Variables:
           SALT: !Ref Salt
           BASE_URL: !Ref BaseUrl
-
+  Redirect:
+    # Lambda関数を作成する
+    # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: redirect/
+      Handler: redirect
+      Runtime: go1.x
+      Tracing: Active
+      Policies: AmazonDynamoDBReadOnlyAccess
+      Events:
+        RedirectEvent:
+          Type: Api
+          Properties:
+            Path: /bits/{path}
+            Method: GET
   BitUrlTable:
     # DynamoDB テーブルを作成
     # https://docs.aws.amazon.com/ja_jp/AWSCloudFormation/latest/UserGuide/aws-resource-dynamodb-table.html
