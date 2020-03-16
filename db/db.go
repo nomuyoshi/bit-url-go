@@ -26,7 +26,11 @@ type BitURL struct {
 
 // New はDynamoDBのインスタンスを返す
 func New() DB {
-	session := session.Must(session.NewSession(&aws.Config{Region: aws.String(env.Config().Region)}))
+	config := &aws.Config{Region: aws.String(env.Config().Region)}
+	if env.Config().Env == "local" {
+		config = config.WithEndpoint("http://dynamodb:8000")
+	}
+	session := session.Must(session.NewSession(config))
 	return DB{Instance: dynamodb.New(session)}
 }
 

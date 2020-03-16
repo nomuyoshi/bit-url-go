@@ -1,0 +1,19 @@
+{
+  "TableName": "bit_urls",
+  "KeySchema": [
+    {
+      "AttributeName": "path",
+      "KeyType": "HASH"
+    }
+  ],
+  "AttributeDefinitions": [
+    {
+      "AttributeName": "path",
+      "AttributeType": "S"
+    }
+  ],
+  "ProvisionedThroughput": {
+    "ReadCapacityUnits": 2,
+    "WriteCapacityUnits": 2
+  }
+}
