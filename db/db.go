@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/pkg/errors"
 
-	_ "github.com/joho/godotenv/autoload"
 	"github.com/nomuyoshi/bit-url/env"
 )
 
@@ -35,11 +34,11 @@ func New() DB {
 }
 
 // PutItem はDynamoDBにデータを作成する
-func (db DB) PutItem(i interface{}) (*dynamodb.PutItemOutput, error) {
+func (db DB) PutItem(b *BitURL) (*dynamodb.PutItemOutput, error) {
 	// struct を*dynamodb.AttributeValueに変換してくれる
 	// https://pkg.go.dev/github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute?tab=doc#example-Marshal
 	// https://pkg.go.dev/github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute?tab=doc#MarshalMap
-	av, err := dynamodbattribute.MarshalMap(i)
+	av, err := dynamodbattribute.MarshalMap(b)
 	if err != nil {
 		return nil, err
 	}

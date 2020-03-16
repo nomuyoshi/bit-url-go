@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 	"time"
@@ -9,8 +10,6 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/speps/go-hashids"
-
-	_ "github.com/joho/godotenv/autoload"
 
 	"github.com/nomuyoshi/bit-url/db"
 	"github.com/nomuyoshi/bit-url/env"
@@ -21,10 +20,6 @@ var config env.Env
 
 type requestBody struct {
 	URL string
-}
-
-type errorResponse struct {
-	message string
 }
 
 type responseBody struct {
@@ -99,7 +94,5 @@ func generateHashID(u *url.URL) string {
 }
 
 func errorResponseBody(msg string) string {
-	res := errorResponse{message: msg}
-	bytes, _ := json.Marshal(res)
-	return string(bytes)
+	return fmt.Sprintf("{\"message\":\"%s\"}", msg)
 }
