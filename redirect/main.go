@@ -21,15 +21,19 @@ func main() {
 }
 
 func handler(req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	path, err := req.PathParameters["path"]
-	if err != nil {
-		return response(http.StatusBadRequest, errorResponseBody(err.Error())), err
+	path, ok := req.PathParameters["path"]
+	if !ok {
+		return response(
+			http.StatusBadRequest,
+			"path parameter not exists",
+		), fmt.Errorf("path parameter not exists")
 	}
+
 	url, err := dynamo.GetItem(path)
 	if err != nil {
 		return response(
 			http.StatusInternalServerError,
-			errorResponseBody("Internal Server Error")
+			errorResponseBody("Internal Server Error"),
 		), err
 	}
 
@@ -37,7 +41,7 @@ func handler(req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse,
 		return response(http.StatusNotFound, ""), nil
 	}
 
-	return redirect(URL), nil
+	return redirect(url), nil
 }
 
 func errorResponseBody(msg string) string {
