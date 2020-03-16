@@ -51,7 +51,7 @@ func (db DB) PutItem(i interface{}) (*dynamodb.PutItemOutput, error) {
 }
 
 // GetItem はDynamoDBのデータを取得する
-func (db DB) GetItem(path string) (*dynamodb.GetItemOutput, error) {
+func (db DB) GetItem(path string) (string, error) {
 	item, err := db.Instance.GetItem(&dynamodb.GetItemInput{
 		TableName: aws.String(table),
 		Key: map[string]*dynamodb.AttributeValue{
