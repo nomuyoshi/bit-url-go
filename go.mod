@@ -1,6 +1,6 @@
 module github.com/nomuyoshi/bit-url
 
-go 1.13
+go 1.13.8
 
 require (
 	github.com/aws/aws-lambda-go v1.15.0
