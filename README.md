@@ -1,3 +1,10 @@
+## URL短縮サービス
+
+```
+$ curl -X POST https://mo68vfaxn5.execute-api.ap-northeast-1.amazonaws.com/Prod/bits -d '{"url":"https://news.yahoo.co.jp/topics"}'
+=> {"url":"https://mo68vfaxn5.execute-api.ap-northeast-1.amazonaws.com/Prod/bits/e7ibhnzqExZ"}
+```
+
 ## requirement
 
 - [aws sam cli](https://docs.aws.amazon.com/ja_jp/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html)
